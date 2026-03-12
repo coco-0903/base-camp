@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Base Camp Dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { min-height: 100vh; background: linear-gradient(160deg, #0a0a14 0%, #111827 40%, #0f172a 100%); color: #e2e8f0; font-family: 'Segoe UI', -apple-system, sans-serif; padding: 20px 24px; }
+  .header { text-align: center; margin-bottom: 24px; }
+  .header-sub { font-size: 11px; letter-spacing: 6px; color: #4a5568; text-transform: uppercase; margin-bottom: 6px; }
+  .header h1 { font-size: 32px; font-weight: 800; background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .header p { color: #475569; font-size: 12px; margin-top: 2px; }
+  .card { background: rgba(255,255,255,0.04); border-radius: 16px; padding: 20px; border: 1px solid rgba(255,255,255,0.07); }
+  .label { font-size: 10px; color: #4a5568; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 12px; font-weight: 600; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .grid-2a { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .clock-time { font-size: 34px; font-weight: 700; font-family: 'Courier New', monospace; color: #f1f5f9; letter-spacing: 2px; }
+  .clock-date { font-size: 14px; color: #64748b; margin-top: 4px; }
+  .weather-row { display: flex; align-items: center; gap: 10px; }
+  .weather-icon { font-size: 36px; }
+  .weather-temp { font-size: 30px; font-weight: 700; }
+  .weather-desc { color: #94a3b8; font-size: 12px; }
+  .weather-detail { display: flex; gap: 14px; margin-top: 6px; font-size: 11px; color: #4a5568; }
+  .streak-num { font-size: 36px; font-weight: 800; color: #f59e0b; }
+  .streak-label { font-size: 13px; color: #64748b; }
+  .streak-week { display: flex; gap: 6px; margin-top: 10px; }
+  .streak-day { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .streak-box { width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+  .streak-box.active { background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.4); color: #f59e0b; }
+  .streak-box.inactive { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); color: #334155; }
+  .streak-day-label { font-size: 9px; color: #475569; }
+  .streak-stats { display: flex; gap: 12px; margin-top: 10px; font-size: 10px; color: #475569; }
+  .streak-stats b { color: #94a3b8; }
+  .quote { background: rgba(99,102,241,0.08); border-radius: 10px; padding: 12px 16px; margin-bottom: 14px; border-left: 3px solid #6366f1; transition: opacity 0.5s; }
+  .quote p { font-size: 13px; font-style: italic; color: #a5b4fc; }
+  .quote .author { font-size: 11px; color: #6366f1; margin-top: 3px; text-align: right; font-style: normal; }
+  .todo-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .todo-count { font-size: 11px; color: #60a5fa; font-weight: 600; }
+  .progress-bg { background: rgba(255,255,255,0.06); border-radius: 99px; height: 5px; margin-bottom: 14px; overflow: hidden; }
+  .progress-fill { background: linear-gradient(90deg, #60a5fa, #a78bfa); height: 100%; border-radius: 99px; transition: width 0.5s; }
+  .todo-list { display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto; }
+  .todo-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+  .todo-item.done { background: rgba(16,185,129,0.06); }
+  .todo-item.undone { background: rgba(255,255,255,0.02); }
+  .todo-check { width: 16px; height: 16px; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 10px; color: #fff; }
+  .todo-check.done { background: #10b981; border: none; }
+  .todo-check.undone { background: transparent; border: 1.5px solid #475569; }
+  .todo-text { flex: 1; font-size: 12px; }
+  .todo-text.done { color: #4a5568; text-decoration: line-through; }
+  .todo-text.undone { color: #cbd5e1; }
+  .todo-cat { font-size: 9px; padding: 2px 5px; border-radius: 4px; }
+  .todo-remove { background: none; border: none; color: #334155; cursor: pointer; font-size: 13px; padding: 0; }
+  .todo-input-row { display: flex; gap: 6px; margin-top: 10px; }
+  .todo-input-row input, .todo-input-row select { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 7px 10px; color: #e2e8f0; font-size: 12px; outline: none; }
+  .todo-input-row input { flex: 1; }
+  .todo-input-row select { width: 90px; }
+  .todo-add-btn { background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none; border-radius: 8px; padding: 0 12px; color: #fff; cursor: pointer; font-size: 14px; font-weight: 700; }
+  .dday-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .dday-toggle { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #94a3b8; cursor: pointer; font-size: 12px; padding: 3px 8px; }
+  .dday-form { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 10px; }
+  .dday-form input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 7px 10px; color: #e2e8f0; font-size: 12px; outline: none; }
+  .dday-type-row { display: flex; gap: 6px; }
+  .dday-type-btn { flex: 1; padding: 6px; border-radius: 6px; cursor: pointer; font-size: 11px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); color: #64748b; }
+  .dday-type-btn.active { border-color: #6366f1; background: rgba(99,102,241,0.15); color: #a5b4fc; }
+  .dday-submit { padding: 7px; border-radius: 8px; background: #6366f1; border: none; color: #fff; cursor: pointer; font-size: 12px; font-weight: 600; }
+  .dday-list { display: flex; flex-direction: column; gap: 8px; }
+  .dday-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; }
+  .dday-item.normal { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); }
+  .dday-item.near { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); }
+  .dday-item.past { background: rgba(239,68,68,0.06); border: 1px solid rgba(255,255,255,0.04); }
+  .dday-icon { font-size: 20px; }
+  .dday-info { flex: 1; }
+  .dday-name { font-size: 12px; color: #cbd5e1; font-weight: 500; }
+  .dday-date { font-size: 10px; color: #475569; }
+  .dday-value { font-size: 18px; font-weight: 800; text-align: right; }
+  .dday-remove { background: none; border: none; color: #1e293b; cursor: pointer; font-size: 12px; padding: 0; }
+  .roadmap-item { margin-bottom: 14px; }
+  .roadmap-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .roadmap-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .roadmap-dot.current { background: #60a5fa; box-shadow: 0 0 8px #60a5fa66; }
+  .roadmap-dot.upcoming { background: #1e293b; }
+  .roadmap-title { font-size: 12px; font-weight: 700; }
+  .roadmap-title.current { color: #f1f5f9; }
+  .roadmap-title.upcoming { color: #475569; }
+  .roadmap-sub { font-size: 10px; }
+  .roadmap-sub.current { color: #94a3b8; }
+  .roadmap-sub.upcoming { color: #334155; }
+  .roadmap-now { font-size: 9px; padding: 1px 7px; border-radius: 99px; background: rgba(96,165,250,0.12); color: #60a5fa; font-weight: 600; }
+  .roadmap-tags { margin-left: 16px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .roadmap-tag { font-size: 10px; padding: 3px 7px; border-radius: 5px; }
+  .roadmap-tag.current { background: rgba(96,165,250,0.08); color: #93c5fd; }
+  .roadmap-tag.upcoming { background: rgba(255,255,255,0.02); color: #334155; }
+  .roadmap-line { margin-left: 3px; height: 10px; width: 1px; background: #1e293b; margin-top: 4px; }
+  .links-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .link-card { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; text-decoration: none; color: #cbd5e1; font-size: 12px; transition: all 0.2s; }
+  .link-card:hover { transform: translateY(-1px); }
+  .link-icon { font-size: 16px; }
+  .link-name { font-weight: 500; }
+  .footer { text-align: center; margin-top: 16px; color: #1e293b; font-size: 10px; }
+  @media (max-width: 768px) { .grid-3, .grid-2a, .grid-2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-sub">Personal Learning Hub</div>
+  <h1>Base Camp</h1>
+  <p>MLOps & Offensive Security를 향한 여정</p>
+</div>
+
+<div class="grid-3">
+  <div class="card">
+    <div class="label">Clock</div>
+    <div class="clock-time" id="clock-time">--:--:--</div>
+    <div class="clock-date" id="clock-date">----.--.-- (-)</div>
+  </div>
+  <div class="card">
+    <div class="label">Weather — Seoul</div>
+    <div id="weather-content"><span style="color:#475569;font-size:13px">로딩중...</span></div>
+  </div>
+  <div class="card">
+    <div class="label">Study Streak</div>
+    <div style="display:flex;align-items:baseline;gap:6px">
+      <span class="streak-num" id="streak-current">1</span>
+      <span class="streak-label">일 연속</span>
+      <span style="font-size:20px;margin-left:2px">🔥</span>
+    </div>
+    <div class="streak-week" id="streak-week"></div>
+    <div class="streak-stats">
+      <span>최고: <b id="streak-best">1일</b></span>
+      <span>이번 달: <b id="streak-month">1일</b></span>
+      <span>총: <b id="streak-total">1일</b></span>
+    </div>
+  </div>
+</div>
+
+<div class="quote" id="quote-box">
+  <p id="quote-text"></p>
+  <p class="author" id="quote-author"></p>
+</div>
+
+<div class="grid-2a">
+  <div class="card">
+    <div class="todo-header">
+      <div class="label">Weekly Todo</div>
+      <span class="todo-count" id="todo-count">0/0 (0%)</span>
+    </div>
+    <div class="progress-bg"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="todo-list" id="todo-list"></div>
+    <div class="todo-input-row">
+      <input id="todo-input" placeholder="할 일 추가..." onkeydown="if(event.key==='Enter')addTodo()">
+      <select id="todo-cat">
+        <option>General</option><option>Infra</option><option>Java</option>
+        <option>Algorithm</option><option>Study</option><option>Security</option>
+        <option>Python</option><option>ML</option>
+      </select>
+      <button class="todo-add-btn" onclick="addTodo()">+</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="dday-header">
+      <div class="label">D-Day Counter</div>
+      <button class="dday-toggle" id="dday-toggle" onclick="toggleDdayForm()">+</button>
+    </div>
+    <div class="dday-form" id="dday-form" style="display:none">
+      <input id="dday-label" placeholder="이름 (예: OSCP 시험)">
+      <input type="date" id="dday-date">
+      <div class="dday-type-row">
+        <button class="dday-type-btn active" id="btn-until" onclick="setDdayType('until')">D-Day까지</button>
+        <button class="dday-type-btn" id="btn-since" onclick="setDdayType('since')">D-Day부터</button>
+      </div>
+      <button class="dday-submit" onclick="addDday()">추가</button>
+    </div>
+    <div class="dday-list" id="dday-list"></div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="label">Roadmap</div>
+    <div id="roadmap"></div>
+  </div>
+  <div class="card">
+    <div class="label">Quick Links</div>
+    <div class="links-grid" id="links"></div>
+  </div>
+</div>
+
+<div class="footer">Base Camp v2.0 — Powered by Claude ⚡</div>
+
+<script>
+const catColors = { Infra:"#6366f1", Java:"#f59e0b", Algorithm:"#10b981", Study:"#8b5cf6", Security:"#ef4444", Python:"#3b82f6", ML:"#f97316", General:"#6b7280" };
+const weatherCodes = { 0:{icon:"☀️",desc:"맑음"},1:{icon:"🌤️",desc:"대체로 맑음"},2:{icon:"⛅",desc:"구름 조금"},3:{icon:"☁️",desc:"흐림"},45:{icon:"🌫️",desc:"안개"},48:{icon:"🌫️",desc:"짙은 안개"},51:{icon:"🌦️",desc:"이슬비"},53:{icon:"🌦️",desc:"이슬비"},55:{icon:"🌧️",desc:"비"},61:{icon:"🌧️",desc:"약한 비"},63:{icon:"🌧️",desc:"비"},65:{icon:"🌧️",desc:"강한 비"},71:{icon:"🌨️",desc:"약한 눈"},73:{icon:"🌨️",desc:"눈"},75:{icon:"❄️",desc:"강한 눈"},95:{icon:"⛈️",desc:"뇌우"} };
+const quotes = [
+  {t:"The best way to predict the future is to create it.",a:"Peter Drucker"},
+  {t:"Every expert was once a beginner.",a:"Helen Hayes"},
+  {t:"Code is like humor. When you have to explain it, it's bad.",a:"Cory House"},
+  {t:"First, solve the problem. Then, write the code.",a:"John Johnson"},
+  {t:"Hack the planet.",a:"Hackers (1995)"},
+  {t:"The quieter you become, the more you can hear.",a:"Kali Linux"},
+  {t:"Stay hungry, stay foolish.",a:"Steve Jobs"},
+  {t:"Talk is cheap. Show me the code.",a:"Linus Torvalds"}
+];
+const days=["일","월","화","수","목","금","토"], dayLabels=["M","T","W","T","F","S","S"];
+const streakWeek=[false,false,false,false,false,false,true];
+let todos=[
+  {id:1,text:"WSL2 + Docker 환경 구축",done:false,cat:"Infra"},
+  {id:2,text:"Java 기본 문법 복습 시작",done:false,cat:"Java"},
+  {id:3,text:"알고리즘 1문제 이상 풀기",done:false,cat:"Algorithm"},
+  {id:4,text:"TIL 3일 이상 작성하기",done:false,cat:"Study"}
+];
+let ddays=[
+  {id:1,label:"이노티움 입사",date:"2026-01-27",icon:"🏢",type:"since"},
+  {id:2,label:"Phase 1 목표",date:"2026-03-31",icon:"🎯",type:"until"},
+  {id:3,label:"Phase 2 시작",date:"2026-04-01",icon:"🚀",type:"until"}
+];
+let ddayType="until", quoteIdx=0;
+
+// Clock
+function updateClock(){
+  const n=new Date();
+  document.getElementById("clock-time").textContent=n.toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false});
+  document.getElementById("clock-date").textContent=`${n.getFullYear()}.${String(n.getMonth()+1).padStart(2,"0")}.${String(n.getDate()).padStart(2,"0")} (${days[n.getDay()]})`;
+}
+setInterval(updateClock,1000); updateClock();
+
+// Weather
+fetch("https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.978&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m&timezone=Asia/Seoul")
+  .then(r=>r.json()).then(d=>{
+    const w=d.current, info=weatherCodes[w.weather_code]||{icon:"🌡️",desc:"알 수 없음"};
+    document.getElementById("weather-content").innerHTML=`
+      <div class="weather-row"><span class="weather-icon">${info.icon}</span><div><div class="weather-temp">${Math.round(w.temperature_2m)}°C</div><div class="weather-desc">${info.desc}</div></div></div>
+      <div class="weather-detail"><span>💨 ${w.wind_speed_10m}km/h</span><span>💧 ${w.relative_humidity_2m}%</span></div>`;
+  }).catch(()=>{document.getElementById("weather-content").innerHTML='<span style="color:#475569;font-size:13px">날씨를 불러올 수 없습니다</span>';});
+
+// Streak
+(function(){
+  const sw=document.getElementById("streak-week");
+  dayLabels.forEach((d,i)=>{
+    sw.innerHTML+=`<div class="streak-day"><div class="streak-box ${streakWeek[i]?"active":"inactive"}">${streakWeek[i]?"✓":""}</div><span class="streak-day-label">${d}</span></div>`;
+  });
+})();
+
+// Quote
+function showQuote(){
+  document.getElementById("quote-text").textContent=`"${quotes[quoteIdx].t}"`;
+  document.getElementById("quote-author").textContent=`— ${quotes[quoteIdx].a}`;
+}
+showQuote(); setInterval(()=>{quoteIdx=(quoteIdx+1)%quotes.length;showQuote();},10000);
+
+// Todos
+function renderTodos(){
+  const list=document.getElementById("todo-list");
+  const done=todos.filter(t=>t.done).length, total=todos.length, pct=total?Math.round(done/total*100):0;
+  document.getElementById("todo-count").textContent=`${done}/${total} (${pct}%)`;
+  document.getElementById("progress-fill").style.width=pct+"%";
+  list.innerHTML=todos.map(t=>`
+    <div class="todo-item ${t.done?"done":"undone"}" onclick="toggleTodo(${t.id})">
+      <div class="todo-check ${t.done?"done":"undone"}">${t.done?"✓":""}</div>
+      <span class="todo-text ${t.done?"done":"undone"}">${t.text}</span>
+      <span class="todo-cat" style="background:${catColors[t.cat]||catColors.General}18;color:${catColors[t.cat]||catColors.General}">${t.cat}</span>
+      <button class="todo-remove" onclick="event.stopPropagation();removeTodo(${t.id})">×</button>
+    </div>`).join("");
+}
+function toggleTodo(id){todos=todos.map(t=>t.id===id?{...t,done:!t.done}:t);renderTodos();}
+function removeTodo(id){todos=todos.filter(t=>t.id!==id);renderTodos();}
+function addTodo(){
+  const inp=document.getElementById("todo-input"), cat=document.getElementById("todo-cat");
+  if(!inp.value.trim())return;
+  todos.push({id:Date.now(),text:inp.value.trim(),done:false,cat:cat.value});
+  inp.value=""; renderTodos();
+}
+renderTodos();
+
+// D-Day
+function calcDday(date,type){
+  const now=new Date();now.setHours(0,0,0,0);
+  const target=new Date(date);target.setHours(0,0,0,0);
+  const diff=Math.round((target-now)/86400000);
+  return type==="since"?Math.abs(diff):diff;
+}
+function renderDdays(){
+  document.getElementById("dday-list").innerHTML=ddays.map(d=>{
+    const val=calcDday(d.date,d.type), isNear=d.type==="until"&&val<=7&&val>0, isPast=d.type==="until"&&val<0;
+    const cls=isNear?"near":isPast?"past":"normal";
+    const color=d.type==="since"?"#60a5fa":isNear?"#f59e0b":isPast?"#ef4444":"#a78bfa";
+    const display=d.type==="since"?`D+${val}`:val===0?"D-Day!":val>0?`D-${val}`:`D+${Math.abs(val)}`;
+    return `<div class="dday-item ${cls}">
+      <span class="dday-icon">${d.icon}</span>
+      <div class="dday-info"><div class="dday-name">${d.label}</div><div class="dday-date">${d.date}</div></div>
+      <div class="dday-value" style="color:${color}">${display}</div>
+      <button class="dday-remove" onclick="removeDday(${d.id})">×</button>
+    </div>`;
+  }).join("");
+}
+function toggleDdayForm(){
+  const f=document.getElementById("dday-form"), b=document.getElementById("dday-toggle");
+  f.style.display=f.style.display==="none"?"flex":"none";
+  b.textContent=f.style.display==="none"?"+":"✕";
+}
+function setDdayType(t){
+  ddayType=t;
+  document.getElementById("btn-until").className="dday-type-btn"+(t==="until"?" active":"");
+  document.getElementById("btn-since").className="dday-type-btn"+(t==="since"?" active":"");
+}
+function addDday(){
+  const label=document.getElementById("dday-label").value, date=document.getElementById("dday-date").value;
+  if(!label||!date)return;
+  ddays.push({id:Date.now(),label,date,icon:ddayType==="since"?"📅":"🎯",type:ddayType});
+  document.getElementById("dday-label").value="";document.getElementById("dday-date").value="";
+  toggleDdayForm(); renderDdays();
+}
+function removeDday(id){ddays=ddays.filter(d=>d.id!==id);renderDdays();}
+renderDdays();
+
+// Roadmap
+const phases=[
+  {title:"Phase 1",sub:"즉시 업무 연동",status:"current",items:["WSL2 + Docker","서버 스택 미러링","VS Code + Java","Java 코드 읽기"]},
+  {title:"Phase 2",sub:"기초 체력",status:"upcoming",items:["Python 기본","알고리즘","네트워크","수학 기초"]},
+  {title:"Phase 3",sub:"목표 분기",status:"upcoming",items:["Offensive Security","MLOps","보안 도구 제작"]}
+];
+document.getElementById("roadmap").innerHTML=phases.map((p,i)=>`
+  <div class="roadmap-item">
+    <div class="roadmap-header">
+      <div class="roadmap-dot ${p.status}"></div>
+      <span class="roadmap-title ${p.status}">${p.title}</span>
+      <span class="roadmap-sub ${p.status}">${p.sub}</span>
+      ${p.status==="current"?'<span class="roadmap-now">NOW</span>':""}
+    </div>
+    <div class="roadmap-tags">${p.items.map(it=>`<span class="roadmap-tag ${p.status}">${it}</span>`).join("")}</div>
+    ${i<phases.length-1?'<div class="roadmap-line"></div>':""}
+  </div>`).join("");
+
+// Links
+const links=[
+  {name:"백준",url:"https://www.acmicpc.net/",icon:"🏆",color:"#3b82f6"},
+  {name:"LeetCode",url:"https://leetcode.com/",icon:"💻",color:"#f59e0b"},
+  {name:"Programmers",url:"https://programmers.co.kr/",icon:"🧩",color:"#8b5cf6"},
+  {name:"TryHackMe",url:"https://tryhackme.com/",icon:"🔓",color:"#ef4444"},
+  {name:"Hack The Box",url:"https://www.hackthebox.com/",icon:"📦",color:"#10b981"},
+  {name:"Java Docs",url:"https://docs.oracle.com/en/java/",icon:"☕",color:"#f97316"},
+  {name:"Python Docs",url:"https://docs.python.org/3/",icon:"🐍",color:"#3b82f6"},
+  {name:"GitHub",url:"https://github.com/",icon:"🐙",color:"#6b7280"}
+];
+document.getElementById("links").innerHTML=links.map(l=>`
+  <a class="link-card" href="${l.url}" target="_blank" rel="noopener" style="background:${l.color}0a;border:1px solid ${l.color}18"
+     onmouseenter="this.style.background='${l.color}1a'" onmouseleave="this.style.background='${l.color}0a'">
+    <span class="link-icon">${l.icon}</span><span class="link-name">${l.name}</span>
+  </a>`).join("");
+</script>
+</body>
+</html>
